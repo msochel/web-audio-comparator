@@ -6,6 +6,10 @@ import Send from '@material-ui/icons/Send';
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
 import TextField from '@material-ui/core/TextField';
+import FormControl from '@material-ui/core/FormControl';
+import FormHelperText from '@material-ui/core/FormHelperText';
+import Input from '@material-ui/core/Input';
+import InputLabel from '@material-ui/core/InputLabel';
 
 
 class App extends Component {
@@ -16,6 +20,7 @@ class App extends Component {
 			bigFile: null,
 			littleFile: null,
 			loading: false,
+			treshold: 0,
 			completed: 0
 		};
 	}
@@ -70,14 +75,20 @@ class App extends Component {
 		})
 	}
 
+	handleTreshold = event => {
+		this.setState({ treshold: event.target.value });
+	  };
+
 	handleUpload = () => {
+		if (!this.state.bigFile || !this.state.littleFile) { return; }
 		var base_url = "https://audio-records-app.herokuapp.com/"
 		request
 		.post('https://audio-records-app.herokuapp.com/collection')
 		.attach('big_file', this.state.bigFile)
 		.attach('little_file', this.state.littleFile)
+		.field('threshold', this.state.treshold)
 		.then(res => {
-			base_url = base_url.concat(res.body.id, "?with_files=0");
+			base_url = base_url.concat(res.body.id, "?include=['charts]");
 			this.timer = setInterval(this.verifyProgress, 500, base_url);
       this.setState({loading: true});
       return;
@@ -127,7 +138,13 @@ class App extends Component {
 							</label>
 						</label>
 					</Grid>
-					<Button variant="contained" color="primary" onClick={this.handleUpload} disabled={this.state.loading} style={{marginRight: "30px"}}>
+					<Grid item xs={12}>
+					<FormControl>
+          				<InputLabel htmlFor="component-simple">Threshold</InputLabel>
+          				<Input id="component-simple" onChange={this.handleTreshold} />
+        			</FormControl>
+					</Grid>
+					<Button variant="contained" color="primary" onClick={this.handleUpload} disabled={this.state.loading || !this.state.bigFile || !this.state.littleFile} style={{marginRight: "30px"}}>
 						Send
         				<Send />
       				</Button>
